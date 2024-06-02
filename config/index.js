@@ -1,10 +1,12 @@
-const { callbackUrl, key, secret } = require("./config.json");
+const { callbackUrl, clientId, clientSecret } = require("./config.json");
+const token = require("./token.json");
 
 const oauthUrl = "https://api.schwabapi.com/v1/oauth";
 
 module.exports = {
   callbackUrl,
-  key,
+  clientId,
+  clientSecret,
   oauthUrl,
-  secret
+  token
 };
