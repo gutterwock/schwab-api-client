@@ -1,10 +1,6 @@
 const axios = require("axios");
-const readline = require("readline").createInterface(
-	process.stdin,
-	process.stdout
-);
+const readline = require("readline");
 const fs = require("fs");
-const querystring = require("querystring");
 const url = require("url");
 
 const { callbackUrl, clientId, clientSecret , oauthUrl, token } = require("../config");
@@ -27,15 +23,16 @@ const requestCodeUrl = async ({ callbackUrl, clientId }) => {
 	}
 };
 
-const requestToken = async ({ clientId, clientSecret, authCode, callbackUrl }) => {
+const requestToken = async ({ clientId, clientSecret, authCode, callbackUrl, grantType, refreshToken }) => {
 	try {
 		return await axios.post(
 			oauthUrl + "/token",
-			querystring.stringify({
-				grant_type: "authorization_code",
+			(new URLSearchParams({
+				grant_type: grantType,
 				code: authCode,
+				refresh_token: refreshToken,
 				redirect_uri: callbackUrl
-			}),
+			})).toString(),
 			{
 				headers: {
 					Authorization: "Basic " + Buffer.from(clientId + ":" + clientSecret).toString("base64"),
@@ -44,53 +41,63 @@ const requestToken = async ({ clientId, clientSecret, authCode, callbackUrl }) =
 			}
 		);
 	} catch (err) {
-		throw new Error(`POST auth code call with status code: ${err.response.status} and data: ${JSON.stringify(err.response.data)}`);
+		if (err.response) {
+			throw new Error(`POST auth code call with status code: ${err.response.status} and data: ${JSON.stringify(err.response.data)}`);
+		} else {
+			throw err;
+		}
 	}
 };
 
+const saveToken = ({ data, outputFile }) => {
+	const {
+		expires_in: expiresIn,
+		refreshExpiration,
+		token_type: tokenType,
+		refresh_token: refreshToken,
+		access_token: accessToken
+	} = data;
+	const tokenExpiration = Date.now() + expiresIn * 1000;
+	fs.writeFileSync(outputFile, JSON.stringify({
+		tokenExpiration,
+		refreshExpiration,
+		tokenType,
+		refreshToken,
+		accessToken
+	}, null, 2));
+};
+
 const main = async (outputFile) => {
-	let { tokenExpiration, refreshExpiration, tokenType, accessToken, refreshToken } = token;
+	let { tokenExpiration, refreshExpiration, accessToken, refreshToken } = token;
 
 	if (accessToken) {
 		if (Date.now() < tokenExpiration) {
-			return tokenType + " " + accessToken;
+			return;
 		} else if (Date.now() < refreshExpiration) {
-			// TODO
-			// request refresh
-			// write new token and expiration
+			const { data } = await requestToken({ clientId, clientSecret, grantType: "refresh_token", refreshToken });
+			saveToken({ data: { ...data, refreshExpiration }, outputFile });
 			return;
 		}
 	}
 	const codeUrl = await requestCodeUrl({ callbackUrl, clientId });
 	console.log("Code url: ", codeUrl);
 	let authCode;
-	readline.question("Enter authenticated url:", async (authedUrl) => {
+	const rl = readline.createInterface(
+		process.stdin,
+		process.stdout
+	);
+	rl.question("Enter authenticated url:", async (authedUrl) => {
+		rl.close();
 		({ query: { code } } = url.parse(authedUrl, true));
 		authCode = decodeURIComponent(code);
 		refreshExpiration = Date.now() + 1000 * 60 * 60 * 24 * 7; // 7 days
-		({
-			data: {
-				expires_in: expiresIn,
-				token_type: tokenType,
-				refresh_token: refreshToken,
-				access_token: accessToken
-			}
-		} = await requestToken({ clientId, clientSecret, authCode, callbackUrl }));
-
-		tokenExpiration = Date.now() + expiresIn * 1000;
-		fs.writeFileSync(outputFile, JSON.stringify({
-			tokenExpiration,
-			refreshExpiration,
-			refreshToken,
-			accessToken
-		}, null, 2));
-
-		return tokenType + " " + token;
+		const { data } = await requestToken({ clientId, clientSecret, authCode, callbackUrl, grantType: "authorization_code" });
+		saveToken({ data: { ...data, refreshExpiration }, outputFile });
+		return;
 	});
 };
 
-main("./config/token.json").then((res) => {
-	// console.log(res);
-}).finally(() => {
-	// readline.close();
+const outputFile = "./config/token.json";
+main(outputFile).then(() => {
+	console.log(`Token saved to ${outputFile}`);
 })
