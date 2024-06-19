@@ -3,6 +3,11 @@ const readline = require("readline");
 const fs = require("fs");
 const url = require("url");
 
+const rl = readline.createInterface(
+	process.stdin,
+	process.stdout
+);
+
 const { callbackUrl, clientId, clientSecret , oauthUrl, token } = require("../config");
 
 const requestCodeUrl = async ({ callbackUrl, clientId }) => {
@@ -82,22 +87,23 @@ const main = async (outputFile) => {
 	const codeUrl = await requestCodeUrl({ callbackUrl, clientId });
 	console.log("Code url: ", codeUrl);
 	let authCode;
-	const rl = readline.createInterface(
-		process.stdin,
-		process.stdout
-	);
-	rl.question("Enter authenticated url:", async (authedUrl) => {
-		rl.close();
-		({ query: { code } } = url.parse(authedUrl, true));
-		authCode = decodeURIComponent(code);
-		refreshExpiration = Date.now() + 1000 * 60 * 60 * 24 * 7; // 7 days
-		const { data } = await requestToken({ clientId, clientSecret, authCode, callbackUrl, grantType: "authorization_code" });
-		saveToken({ data: { ...data, refreshExpiration }, outputFile });
-		return;
+
+	const authedUrl = await new Promise(resolve => {
+		rl.question("Enter authenticated url:", resolve);
 	});
+	({ query: { code } } = url.parse(authedUrl, true));
+	authCode = decodeURIComponent(code);
+	refreshExpiration = Date.now() + 1000 * 60 * 60 * 24 * 7; // 7 days
+	const { data } = await requestToken({ clientId, clientSecret, authCode, callbackUrl, grantType: "authorization_code" });
+	saveToken({ data: { ...data, refreshExpiration }, outputFile });
+	return;
 };
 
 const outputFile = "./config/token.json";
-main(outputFile).then(() => {
-	console.log(`Token saved to ${outputFile}`);
-})
+main(outputFile)
+	.then(() => {
+		console.log(`Token saved to ${outputFile}`);
+	})
+	.finally(() => {
+		rl.close();
+	});
