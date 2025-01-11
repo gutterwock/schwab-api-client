@@ -3,18 +3,24 @@ const readline = require("readline");
 const fs = require("fs");
 const url = require("url");
 
+const configDir = process.env.CONFIG_DIR || "./config";
+
 const rl = readline.createInterface(
 	process.stdin,
 	process.stdout
 );
 
-const { callbackUrl, clientId, clientSecret , oauthUrl, token } = require("../config");
+const { callbackUrl, clientId, clientSecret, oAuthUrl } = JSON.parse(fs.readFileSync(configDir + "/config.json"));
+let token = {};
+try {
+	token = JSON.parse(fs.readFileSync(configDir + "/token.json"));
+} catch {}
 
 const requestCodeUrl = async ({ callbackUrl, clientId }) => {
 	try {
 		const res =  await axios({
 			method: "get",
-			url: oauthUrl +  "/authorize?client_id=" + encodeURIComponent(clientId) + "&redirect_uri=" + encodeURIComponent(callbackUrl),
+			url: oAuthUrl +  "/authorize?client_id=" + encodeURIComponent(clientId) + "&redirect_uri=" + encodeURIComponent(callbackUrl),
 			maxRedirects: 0
 		});
 		return res.headers.location;
@@ -31,7 +37,7 @@ const requestCodeUrl = async ({ callbackUrl, clientId }) => {
 const requestToken = async ({ clientId, clientSecret, authCode, callbackUrl, grantType, refreshToken }) => {
 	try {
 		return await axios.post(
-			oauthUrl + "/token",
+			oAuthUrl + "/token",
 			(new URLSearchParams({
 				grant_type: grantType,
 				code: authCode,
