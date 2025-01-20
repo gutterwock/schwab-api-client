@@ -12,7 +12,7 @@
     "url": "git+https://github.com/gutterwock/schwab-auth.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "GNU GPL",
   "bugs": {
     "url": "https://github.com/gutterwock/schwab-auth/issues"
   },
