@@ -18,4 +18,4 @@ Generates a `token.json` with access and refresh tokens for use with Schwab APIs
 
 	6. Copy the url of the blank page into console and proceed
 
-	7. Use the generating `token.json` to call Schwab APIs
+	7. Use the generated `token.json` to call Schwab APIs
