@@ -4,8 +4,8 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "auth": "node src/auth/index.js",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -19,5 +19,8 @@
   "homepage": "https://github.com/gutterwock/schwab-auth#readme",
   "dependencies": {
     "axios": "^1.6.8"
+  },
+  "devDependencies": {
+    "jest": "^30.0.5"
   }
 }
