@@ -4,6 +4,7 @@ const readline = require("readline");
 
 const OAUTH_URL = "https://api.schwabapi.com/v1/oauth";
 
+// TODO: convert to common callApi
 const requestCodeUrl = async ({ callbackUrl, clientId }) => {
 	try {
 		const res =  await axios({
@@ -24,25 +25,25 @@ const requestCodeUrl = async ({ callbackUrl, clientId }) => {
 
 const requestToken = async ({ clientId, clientSecret, authCode, callbackUrl, grantType, refreshToken }) => {
 	try {
-		return await axios({
-			method: "post",
-			url: OAUTH_URL + "/token?" + (new URLSearchParams({
+		return await axios.post(
+			OAUTH_URL + "/token",
+			(new URLSearchParams({
 				grant_type: grantType,
 				code: authCode,
 				refresh_token: refreshToken,
 				redirect_uri: callbackUrl
 			})).toString(),
-			headers: {
-				Authorization: "Basic " + Buffer.from(clientId + ":" + clientSecret).toString("base64"),
-				"Content-Type": "application/x-www-form-urlencoded"
+			{
+				headers: {
+					Authorization: "Basic " + Buffer.from(clientId + ":" + clientSecret).toString("base64"),
+					"Content-Type": "application/x-www-form-urlencoded"
+				}
 			}
-		});
+		);
 	} catch (err) {
-		
 		if (err.response) {
 			throw new Error(`POST auth code call with status code: ${err.response.status} and data: ${JSON.stringify(err.response.data)}`);
 		} else {
-			console.log(err)
 			throw err;
 		}
 	}
