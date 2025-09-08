@@ -1,22 +1,22 @@
 {
-  "name": "schwab-auth",
+  "name": "schwab-api-client",
   "version": "1.0.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "auth": "node src/auth/index.js",
+    "start": "node src/index.js",
     "test": "jest"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gutterwock/schwab-auth.git"
+    "url": "git+https://github.com/gutterwock/schwab-api-client.git"
   },
-  "author": "",
+  "author": "gutterwock",
   "license": "GNU GPL",
   "bugs": {
-    "url": "https://github.com/gutterwock/schwab-auth/issues"
+    "url": "https://github.com/gutterwock/schwab-api-client/issues"
   },
-  "homepage": "https://github.com/gutterwock/schwab-auth#readme",
+  "homepage": "https://github.com/gutterwock/schwab-api-client#readme",
   "dependencies": {
     "axios": "^1.6.8"
   },
