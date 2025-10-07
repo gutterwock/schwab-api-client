@@ -8,6 +8,10 @@ const {
 	saveToken
 } = require("./auth/authHelper");
 
+const account = require("./account");
+const market = require("./market");
+const order = require("./order");
+
 class SchwabApiClient {
 	constructor({ configFile, tokenFile }) {
 		this.configFile = configFile;
@@ -25,6 +29,25 @@ class SchwabApiClient {
 		this.refreshToken = tokenData.refreshToken;
 		this.tokenExpiration = tokenData.tokenExpiration;
 		this.refreshExpiration = tokenData.refreshExpiration;
+	};
+
+	// TODO: can just set the token at the callApi level instead, and use preconfigured axiosClient
+	useInstanceToken() {
+		this.account = this.useToken(account);
+		this.market = this.useToken(market);
+		this.order = this.useToken(order);
+	};
+
+	useToken(api) {
+		const result = {};
+		for (const key in api) {
+      if (typeof api[key] === "function") {
+        result[key] = ({ ...args }) => {
+          return api[key]({ token: this.accessToken, ...args });
+        };
+      }
+		}
+		return result;
 	};
 
 	async authenticate() {

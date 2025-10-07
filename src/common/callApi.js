@@ -27,7 +27,10 @@ const callApi = async ({
 		});
 	} catch (error) {
 		logError({ error, message: `Failed to ${method} ${name || path}:` + error.message });
-		throw error;
+		if (error.response) {
+			console.error(JSON.stringify(error.response.data));
+		}
+		throw (error.response ? new Error(error.message) : error);
 	}
 };
 

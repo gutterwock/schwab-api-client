@@ -1,6 +1,6 @@
 const callApi = require("../common/callApi");
 
-const queryPriceHistory = (token, params) => {
+const queryPriceHistory = ({ token, params }) => {
 	return callApi({
 		method: "get",
 		path: "/marketdata/v1/pricehistory",
@@ -9,7 +9,7 @@ const queryPriceHistory = (token, params) => {
 	});
 };
 
-const getQuotes = (token, symbols = [], fields = ["quote"]) => {
+const getQuotes = ({ token, symbols = [], fields = ["quote"] }) => {
 	return callApi({
 		method: "get",
 		path: "/marketdata/v1/quotes",
