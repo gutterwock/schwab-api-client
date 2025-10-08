@@ -42,8 +42,8 @@ class SchwabApiClient {
 		const result = {};
 		for (const key in api) {
       if (typeof api[key] === "function") {
-        result[key] = ({ ...args }) => {
-          return api[key]({ token: this.accessToken, ...args });
+        result[key] = (args) => {
+          return api[key]({ token: this.accessToken, ...(args || {}) });
         };
       }
 		}
